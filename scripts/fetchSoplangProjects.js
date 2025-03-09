@@ -7,7 +7,7 @@ dotenv.config();
 const JSON_FILE = 'data/community_projects.json';
 const LATEST_PROJECT_FILE = 'data/latest_project.txt';
 const GITHUB_API_URL = 'https://api.github.com/search/repositories?q=soplang';
-const TOKEN = process.env.GITHUB_TOKEN;
+const TOKEN = process.env.SAT;
 
 const fetchSoplangProjects = async () => {
     try {
