@@ -1,0 +1,54 @@
+name: Fetch Soplang Projects
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:  # Allows manual execution
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v18
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install axios fs dotenv
+
+      - name: Fetch Soplang Repositories
+        run: node scripts/fetchSoplangProjects.js
+
+      - name: Extract Latest Project Name
+        id: latest_project
+        run: |
+          if [ -f "data/latest_project.txt" ]; then
+            LATEST_PROJECT=$(cat data/latest_project.txt)
+            echo "LATEST_PROJECT=$LATEST_PROJECT" >> $GITHUB_ENV
+          else
+            echo "LATEST_PROJECT=Unknown Project" >> $GITHUB_ENV
+          fi
+
+      - name: Check for Changes
+        id: check
+        run: |
+          git add data/community_projects.json
+          if git diff --cached --quiet; then
+            echo "No changes detected."
+            echo "changed=false" >> $GITHUB_ENV
+          else
+            echo "Changes detected."
+            echo "changed=true" >> $GITHUB_ENV
+          fi
+
+      - name: Commit and Push Changes
+        if: env.changed == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "📌 Added project: $LATEST_PROJECT"
+          git push
